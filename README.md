@@ -34,3 +34,4 @@ This CLI was created with [Cookiecutter](https://github.com/audreyr/cookiecutter
 - [Backup script](https://github.com/joaopalmeiro/scriptkit-playground/blob/main/google-zx/backup-gh.mjs).
 - [ghapi documentation](https://ghapi.fast.ai/) ([API](https://ghapi.fast.ai/fullapi.html)).
 - `glone joaopalmeiro`.
+- [GitPython](https://github.com/gitpython-developers/GitPython) package.

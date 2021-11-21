@@ -1,5 +1,5 @@
 import click
-from ghapi.all import GhApi
+from ghapi.all import GhApi, paged
 
 from . import __version__
 from .constants import DEFAULT_ENV_VARIABLE
@@ -23,6 +23,7 @@ def main(username, token):
     # - https://ghapi.fast.ai/core.html#Operations
     # (if don't pass the token parameter, then your GITHUB_TOKEN environment variable
     # will be used, if available)
+    # - https://ghapi.fast.ai/page.html#paged
     api = GhApi(owner=username, token=token)
 
     # More info:
@@ -35,9 +36,14 @@ def main(username, token):
     # (all repositories)
 
     # repos = api.repos.list_for_user(username=username, type="all", sort="pushed")
-    repos = api.repos.list_for_authenticated_user(
-        visibility="all", affiliation="owner", sort="pushed"
+    repos = paged(
+        api.repos.list_for_authenticated_user,
+        visibility="all",
+        affiliation="owner",
+        sort="full_name",
     )
 
-    for repo in repos:
-        click.echo(repo.name)
+    for page in repos:
+        # click.echo(len(page))
+        for repo in page:
+            click.echo(repo.name)
