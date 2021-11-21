@@ -25,6 +25,7 @@ def main(username, token):
     # will be used, if available)
     # - https://ghapi.fast.ai/page.html#paged
     api = GhApi(owner=username, token=token)
+    # click.echo(api.headers)
 
     # More info:
     # - https://ghapi.fast.ai/fullapi.html#repos
@@ -42,6 +43,19 @@ def main(username, token):
         affiliation="owner",
         sort="full_name",
     )
+
+    # More info:
+    # - https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-zip
+    # - https://github.com/fastai/ghapi/issues/22
+    # - https://github.com/fastai/fastcore/pull/308
+    # - https://github.com/fastai/fastcore/blob/1.3.27/fastcore/net.py#L203
+    # - https://stackoverflow.com/a/67964008
+    # (ref="" for the master/main branch)
+    # Note: It is not working. Use an alternative. See error message for debugging.
+    # It would work if the execution was via this if branch, for example:
+    # https://github.com/fastai/fastcore/blob/1.3.27/fastcore/net.py#L209
+    # api.repos.download_zipball_archive(repo="glone", ref="")
+    # api.repos.download_zipball_archive(repo="glone", ref="", archive_format="zip")
 
     for page in repos:
         # click.echo(len(page))
