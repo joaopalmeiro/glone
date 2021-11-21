@@ -35,3 +35,4 @@ This CLI was created with [Cookiecutter](https://github.com/audreyr/cookiecutter
 - [ghapi documentation](https://ghapi.fast.ai/) ([API](https://ghapi.fast.ai/fullapi.html)).
 - `glone joaopalmeiro`.
 - [GitPython](https://github.com/gitpython-developers/GitPython) package.
+- [GitHub CLI](https://cli.github.com/) (a.k.a. `gh`).
