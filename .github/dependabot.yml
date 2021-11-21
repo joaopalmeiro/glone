@@ -1,0 +1,11 @@
+# More info: https://docs.github.com/en/code-security/supply-chain-security/configuration-options-for-dependency-updates
+version: 2
+updates:
+  # pip, pipenv, pip-compile, or poetry
+  # More info: https://docs.github.com/en/code-security/supply-chain-security/about-dependabot-version-updates
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Disable version updates for pip dependencies
+    open-pull-requests-limit: 0

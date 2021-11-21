@@ -1,0 +1,23 @@
+# More info: https://editorconfig.org/
+# List of properties: https://github.com/editorconfig/editorconfig/wiki/EditorConfig-Properties
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+charset = utf-8
+
+[*.{js,json,y{a,}ml,html}]
+indent_style = space
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+[*.{md,rst}]
+trim_trailing_whitespace = false
+indent_style = space
+indent_size = 2
