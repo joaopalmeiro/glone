@@ -1,5 +1,6 @@
 import click
-from ghapi.all import GhApi, paged
+from fastcore.net import urlsend
+from ghapi.all import GH_HOST, GhApi, paged
 
 from . import __version__
 from .constants import DEFAULT_ENV_VARIABLE
@@ -26,6 +27,7 @@ def main(username, token):
     # - https://ghapi.fast.ai/page.html#paged
     api = GhApi(owner=username, token=token)
     # click.echo(api.headers)
+    # click.echo(api.func_dict)
 
     # More info:
     # - https://ghapi.fast.ai/fullapi.html#repos
@@ -57,7 +59,26 @@ def main(username, token):
     # api.repos.download_zipball_archive(repo="glone", ref="")
     # api.repos.download_zipball_archive(repo="glone", ref="", archive_format="zip")
 
-    for page in repos:
-        # click.echo(len(page))
-        for repo in page:
-            click.echo(repo.name)
+    # Workaround:
+    # - https://fastcore.fast.ai/net.html#urlsend)
+    # - https://docs.github.com/en/rest/reference/actions#download-an-artifact
+    # - https://docs.python.org/3.6/library/functions.html#open
+    # - https://stackoverflow.com/a/6633693
+    zip_url = f"{GH_HOST}/repos/{username}/" + "{repo}/zipball/{ref}"
+    route = {"repo": "glone", "ref": "", "archive_format": "zip"}
+    # click.echo(zip_url, route)
+
+    res, headers = urlsend(
+        zip_url, "GET", headers=api.headers, route=route, return_headers=True
+    )
+    # click.echo(headers)
+
+    _, _, output_filename = headers["content-disposition"].partition("filename=")
+    # click.echo(output_filename)
+    with open(output_filename, "wb") as fh:
+        fh.write(res)
+
+    # for page in repos:
+    #     # click.echo(len(page))
+    #     for repo in page:
+    #         click.echo(repo.name)

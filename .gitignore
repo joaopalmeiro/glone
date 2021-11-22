@@ -130,3 +130,5 @@ dmypy.json
 
 # glone
 repos.txt
+test.json
+*.zip
