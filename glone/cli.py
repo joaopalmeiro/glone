@@ -9,6 +9,15 @@ from .constants import DEFAULT_ENV_VARIABLE
 @click.command()
 @click.argument("username", type=str)
 @click.option(
+    "-o",
+    "--output",
+    type=click.Path(
+        exists=True, file_okay=False, dir_okay=True, writable=True, resolve_path=True
+    ),
+    default=".",
+    metavar="PATH",
+)
+@click.option(
     "-t",
     "--token",
     type=str,
@@ -17,7 +26,7 @@ from .constants import DEFAULT_ENV_VARIABLE
     show_envvar=True,
 )
 @click.version_option(version=__version__)
-def main(username, token):
+def main(username, output, token):
     """A Python CLI to backup all your GitHub repositories."""
     # More info:
     # - https://ghapi.fast.ai/core.html#GhApi
