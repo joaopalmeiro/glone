@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/joaopalmeiro/glone"
 repository = "https://github.com/joaopalmeiro/glone"
-keywords = ["glone", "cli"]
+keywords = ["glone", "cli", "backup", "repo", "repository", "github", "github-api"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
