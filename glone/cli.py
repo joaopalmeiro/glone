@@ -3,7 +3,7 @@ from fastcore.net import urlsend
 from ghapi.all import GH_HOST, GhApi, paged
 
 from . import __version__
-from .constants import DEFAULT_ENV_VARIABLE
+from .constants import ARCHIVE_FILE_FORMATS, DEFAULT_ENV_VARIABLE
 
 
 @click.command()
@@ -16,6 +16,14 @@ from .constants import DEFAULT_ENV_VARIABLE
     ),
     default=".",
     metavar="PATH",
+    show_default=True,
+)
+@click.option(
+    "-f",
+    "--file-format",
+    type=click.Choice(ARCHIVE_FILE_FORMATS, case_sensitive=False),
+    default=ARCHIVE_FILE_FORMATS[0],
+    show_default=True,
 )
 @click.option(
     "-t",
@@ -26,7 +34,7 @@ from .constants import DEFAULT_ENV_VARIABLE
     show_envvar=True,
 )
 @click.version_option(version=__version__)
-def main(username, output, token):
+def main(username, output, file_format, token):
     """A Python CLI to backup all your GitHub repositories."""
     # More info:
     # - https://ghapi.fast.ai/core.html#GhApi
@@ -57,6 +65,7 @@ def main(username, output, token):
 
     # More info:
     # - https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-zip
+    # - https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-tar
     # - https://github.com/fastai/ghapi/issues/22
     # - https://github.com/fastai/fastcore/pull/308
     # - https://github.com/fastai/fastcore/blob/1.3.27/fastcore/net.py#L203
@@ -69,13 +78,20 @@ def main(username, output, token):
     # api.repos.download_zipball_archive(repo="glone", ref="", archive_format="zip")
 
     # Workaround:
-    # - https://fastcore.fast.ai/net.html#urlsend)
+    # - https://fastcore.fast.ai/net.html#urlsend
     # - https://docs.github.com/en/rest/reference/actions#download-an-artifact
     # - https://docs.python.org/3.6/library/functions.html#open
     # - https://stackoverflow.com/a/6633693
-    zip_url = f"{GH_HOST}/repos/{username}/" + "{repo}/zipball/{ref}"
-    route = {"repo": "glone", "ref": "", "archive_format": "zip"}
-    # click.echo(zip_url, route)
+    # - https://click.palletsprojects.com/en/7.x/options/?highlight=choice#choice-options
+    zip_url = (
+        f"{GH_HOST}/repos/{username}/" + "{repo}/" + f"{file_format}ball" + "/{ref}"
+    )
+    route = {"repo": "glone", "ref": "", "archive_format": file_format}
+    # or
+    # route = {"repo": "glone", "ref": "", "archive_format": "zip"}
+
+    # click.echo(zip_url)
+    # click.echo(route)
 
     res, headers = urlsend(
         zip_url, "GET", headers=api.headers, route=route, return_headers=True

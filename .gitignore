@@ -132,3 +132,4 @@ dmypy.json
 repos.txt
 test.json
 *.zip
+*.tar.gz
