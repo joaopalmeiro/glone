@@ -105,27 +105,47 @@ def main(username: str, output: str, file_format: str, token: str) -> None:
     # - https://docs.python.org/3.6/library/functions.html#open
     # - https://stackoverflow.com/a/6633693
     # - https://click.palletsprojects.com/en/7.x/options/?highlight=choice#choice-options
-    zip_url = (
-        f"{GH_HOST}/repos/{username}/" + "{repo}/" + f"{file_format}ball" + "/{ref}"
-    )
-    route = {"repo": "glone", "ref": "", "archive_format": file_format}
+    # zip_url = (
+    #     f"{GH_HOST}/repos/{username}/" + "{repo}/" + f"{file_format}ball" + "/{ref}"
+    # )
+    # route = {"repo": "glone", "ref": "", "archive_format": file_format}
     # or
     # route = {"repo": "glone", "ref": "", "archive_format": "zip"}
 
     # click.echo(zip_url)
     # click.echo(route)
 
-    res, headers = urlsend(
-        zip_url, "GET", headers=api.headers, route=route, return_headers=True
-    )
+    # res, headers = urlsend(
+    #     zip_url, "GET", headers=api.headers, route=route, return_headers=True
+    # )
     # click.echo(headers)
 
-    _, _, output_filename = headers["content-disposition"].partition("filename=")
+    # _, _, output_filename = headers["content-disposition"].partition("filename=")
     # click.echo(output_filename)
-    with open(output_folder / output_filename, "wb") as fh:
-        fh.write(res)
+    # with open(output_folder / output_filename, "wb") as fh:
+    #     fh.write(res)
 
+    zip_url = (
+        f"{GH_HOST}/repos/{username}/" + "{repo}/" + f"{file_format}ball" + "/{ref}"
+    )
     for page in repos:
         # click.echo(len(page))
         for repo in page:
-            click.echo(repo.name)
+            click.echo(f"Repo: {repo.name}")
+
+            route = {"repo": repo.name, "ref": "", "archive_format": file_format}
+            res, headers = urlsend(
+                zip_url, "GET", headers=api.headers, route=route, return_headers=True
+            )
+
+            _, _, output_filename = headers["content-disposition"].partition(
+                "filename="
+            )
+            output_file_path = output_folder / output_filename
+
+            with open(output_file_path, "wb") as fh:
+                fh.write(res)
+
+            click.echo(f"Archive file: {output_file_path}")
+
+    click.echo("Done!")
