@@ -1,12 +1,18 @@
 from datetime import datetime
 from pathlib import Path
+from typing import Generator
 
 import click
 from fastcore.net import urlsend
 from ghapi.all import GH_HOST, GhApi, paged
 
 from . import __version__
-from .constants import ARCHIVE_FILE_FORMATS, DEFAULT_ENV_VARIABLE
+from .constants import (
+    ARCHIVE_FILE_FORMATS,
+    DEFAULT_ENV_VARIABLE,
+    OUTPUT_FOLDER_PREFIX,
+    OUTPUT_FOLDER_SEP,
+)
 
 
 @click.command()
@@ -59,7 +65,7 @@ def main(username: str, output: str, file_format: str, token: str) -> None:
     # (all repositories)
 
     # repos = api.repos.list_for_user(username=username, type="all", sort="pushed")
-    repos = paged(
+    repos: Generator = paged(
         api.repos.list_for_authenticated_user,
         visibility="all",
         affiliation="owner",
@@ -71,9 +77,13 @@ def main(username: str, output: str, file_format: str, token: str) -> None:
     # - https://docs.python.org/3.6/library/pathlib.html#pathlib.Path.mkdir
     # - https://stackoverflow.com/a/32490661
     # - https://docs.python.org/3.6/library/pathlib.html#pathlib.Path.open
-    timestamp: str = datetime.today().strftime("%Y%m%d-%H%M%S")
-    output_folder = Path(output) / timestamp
+    timestamp: str = datetime.today().strftime(f"%Y%m%d{OUTPUT_FOLDER_SEP}%H%M%S")
+    output_folder = (
+        Path(output) / f"{OUTPUT_FOLDER_PREFIX}{OUTPUT_FOLDER_SEP}{timestamp}"
+    )
     output_folder.mkdir(parents=False, exist_ok=False)
+
+    click.echo(f"Output folder: {output_folder}")
 
     # More info:
     # - https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-zip
@@ -115,7 +125,7 @@ def main(username: str, output: str, file_format: str, token: str) -> None:
     with open(output_folder / output_filename, "wb") as fh:
         fh.write(res)
 
-    # for page in repos:
-    #     # click.echo(len(page))
-    #     for repo in page:
-    #         click.echo(repo.name)
+    for page in repos:
+        # click.echo(len(page))
+        for repo in page:
+            click.echo(repo.name)
