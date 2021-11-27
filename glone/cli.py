@@ -1,3 +1,6 @@
+from datetime import datetime
+from pathlib import Path
+
 import click
 from fastcore.net import urlsend
 from ghapi.all import GH_HOST, GhApi, paged
@@ -34,7 +37,7 @@ from .constants import ARCHIVE_FILE_FORMATS, DEFAULT_ENV_VARIABLE
     show_envvar=True,
 )
 @click.version_option(version=__version__)
-def main(username, output, file_format, token):
+def main(username: str, output: str, file_format: str, token: str) -> None:
     """A Python CLI to backup all your GitHub repositories."""
     # More info:
     # - https://ghapi.fast.ai/core.html#GhApi
@@ -62,6 +65,15 @@ def main(username, output, file_format, token):
         affiliation="owner",
         sort="full_name",
     )
+
+    # More info:
+    # - https://stackoverflow.com/a/50110841
+    # - https://docs.python.org/3.6/library/pathlib.html#pathlib.Path.mkdir
+    # - https://stackoverflow.com/a/32490661
+    # - https://docs.python.org/3.6/library/pathlib.html#pathlib.Path.open
+    timestamp: str = datetime.today().strftime("%Y%m%d-%H%M%S")
+    output_folder = Path(output) / timestamp
+    output_folder.mkdir(parents=False, exist_ok=False)
 
     # More info:
     # - https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-zip
@@ -100,7 +112,7 @@ def main(username, output, file_format, token):
 
     _, _, output_filename = headers["content-disposition"].partition("filename=")
     # click.echo(output_filename)
-    with open(output_filename, "wb") as fh:
+    with open(output_folder / output_filename, "wb") as fh:
         fh.write(res)
 
     # for page in repos:
