@@ -5,6 +5,7 @@ from typing import Generator
 import click
 from fastcore.net import urlsend
 from ghapi.all import GH_HOST, GhApi, paged
+from humanize import naturalsize
 
 from . import __version__
 from .constants import (
@@ -13,6 +14,7 @@ from .constants import (
     OUTPUT_FOLDER_PREFIX,
     OUTPUT_FOLDER_SEP,
 )
+from .utils import get_folder_file_count, get_folder_size
 
 
 @click.command()
@@ -147,5 +149,17 @@ def main(username: str, output: str, file_format: str, token: str) -> None:
                 fh.write(res)
 
             click.echo(f"Archive file: {output_file_path}")
+            # break
+        # break
+
+    click.echo(f"Number of archive files/repos: {get_folder_file_count(output_folder)}")
+    # Compare with:
+    # du -ch <OUTPUT_FOLDER>/*
+    # du -sh <OUTPUT_FOLDER>
+    size = get_folder_size(output_folder)
+    click.echo(
+        "Output folder size (approximate): "
+        f"{naturalsize(size, binary=False, gnu=False)}"
+    )
 
     click.echo("Done!")
