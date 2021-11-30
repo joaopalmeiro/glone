@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "glone"
-version = "0.0.1"
+version = "0.1.0"
 description = "A Python CLI to backup all your GitHub repositories."
 authors = ["João Palmeiro <joaommpalmeiro@gmail.com>"]
 license = "MIT"
