@@ -1,5 +1,6 @@
 # Notes
 
+- https://github.com/joaopalmeiro/template-python-cli
 - EditorConfig:
   - https://github.com/github-linguist/linguist/blob/v7.28.0/lib/linguist/languages.yml#L1757
   - https://editorconfig.org/: "EditorConfig files use an INI format that is compatible with the format used by Python ConfigParser Library, but `[` and `]` are allowed in the section names."

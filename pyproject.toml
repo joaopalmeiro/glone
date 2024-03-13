@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "glone"
+dynamic = ["version"]
+description = "A CLI to back up all your GitHub repositories."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "João Palmeiro", email = "joaopalmeiro@proton.me" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Utilities",
+]
+dependencies = [
+  "click>=8.1.0",
+  "httpx>=0.27.0",
+  "platformdirs>=4.0.0",
+  "pydantic>=2.6.0",
+  "trio>=0.24.0",
+  "gaveta==0.1.1",
+]
+
+[project.urls]
+Issues = "https://github.com/joaopalmeiro/glone/issues"
+Source = "https://github.com/joaopalmeiro/glone"
+
+[project.scripts]
+glone = "glone.cli:main"
+
+[tool.hatch.version]
+path = "src/glone/__init__.py"
+
+[tool.hatch.envs.default]
+detached = false
+dependencies = ["ruff==0.3.0", "mypy==1.8.0"]
+
+[tool.hatch.envs.default.scripts]
+lint = ["- ruff check .", "mypy"]
+format = ["- ruff check --fix .", "ruff format ."]
+
+[tool.hatch.build]
+packages = ["src/glone"]
