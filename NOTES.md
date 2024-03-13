@@ -9,8 +9,39 @@
   - `A String name of the Ace Mode used for highlighting whenever a file is edited. This must match one of the filenames in https://gh.io/acemodes. Use "text" if a mode does not exist.`
   - https://github.com/ajaxorg/ace/tree/master/src/mode
 - https://github.com/github-linguist/linguist/blob/v7.28.0/lib/linguist/languages.yml#L7988: `yml` or `yaml`
+- https://docs.github.com/rest:
+  - https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api?apiVersion=2022-11-28#authenticating-with-a-personal-access-token
+  - https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-the-authenticated-user
+  - https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api?apiVersion=2022-11-28#headers
+  - https://docs.github.com/en/rest/about-the-rest-api/api-versions?apiVersion=2022-11-28#supported-api-versions
+  - https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28
+  - https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#download-a-repository-archive-zip
+- https://github.com/Colin-b/httpx_auth
+- https://www.python-httpx.org/advanced/authentication/#custom-authentication-schemes
+- https://gist.github.com/astrojuanlu/c5a416ab2a4abc9ae170b74177cc29d7
+- https://www.python-httpx.org/async/#trio
+- `paged()`
+  - https://ghapi.fast.ai/page.html#paged
+  - https://ghapi.fast.ai/page.html#link-header-rfc-5988
+  - https://github.com/fastai/ghapi/blob/1.0.3/ghapi/page.py#L14
+  - https://docs.python.org/3/library/itertools.html#itertools.takewhile
+  - https://github.com/fastai/fastcore/blob/1.5.29/fastcore/imports.py#L35
+- https://github.com/gidgethub/gidgethub
+- https://github.com/encode/httpx/discussions/2662
+- https://stackoverflow.com/questions/56248641/how-paginate-through-api-response-asynchronously-with-asyncio-and-aiohttp
+- https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api?apiVersion=2022-11-28#scripting-with-pagination
+- https://www.python-httpx.org/quickstart/#response-headers
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link
+- https://github.com/encode/httpx/blob/0.27.0/httpx/_models.py#L782
+- https://github.com/encode/httpx/blob/0.27.0/httpx/_models.py#L773
 
 ## Snippets
+
+```python
+from pathlib import Path
+from gaveta.json import write_json
+write_json(repos, Path("repos.json"))
+```
 
 ### `.github/dependabot.yml` file
 

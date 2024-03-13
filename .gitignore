@@ -8,3 +8,5 @@ dist/
 
 # https://github.com/python/mypy/blob/v1.8.0/docs/source/config_file.rst#incremental-mode
 .mypy_cache/
+
+repos.json
