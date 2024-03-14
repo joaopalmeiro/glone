@@ -1,5 +1,4 @@
 from pathlib import Path
-from urllib.parse import urljoin
 
 import click
 import httpx
@@ -9,12 +8,13 @@ from gaveta.time import ISOFormat, now_iso
 
 from glone import __version__
 from glone.cli.constants import (
+    ARCHIVE_FORMAT,
     BASE_OUTPUT_FOLDER,
     BASE_URL,
     DEFAULT_ENV_VARIABLE,
-    REPOS_ENDPOINT,
+    REPOS_URL,
 )
-from glone.cli.models import Repos
+from glone.cli.models import Repo, Repos
 
 
 def save_repos(repos: Repos, output_folder: Path) -> None:
@@ -29,7 +29,7 @@ def save_repos(repos: Repos, output_folder: Path) -> None:
 
 async def get_repos(headers: httpx.Headers) -> Repos:
     repos = []
-    next_url = urljoin(BASE_URL, REPOS_ENDPOINT)
+    next_url = REPOS_URL
 
     async with httpx.AsyncClient(
         headers=headers, params={"visibility": "all", "affiliation": "owner"}
@@ -46,6 +46,38 @@ async def get_repos(headers: httpx.Headers) -> Repos:
                 break
 
     return Repos(repos)
+
+
+def generate_archive_endpoint(repo: Repo) -> str:
+    return f"/repos/{repo.full_name}/{ARCHIVE_FORMAT}ball/{repo.default_branch}"
+
+
+async def get_single_archive(
+    client: httpx.AsyncClient, repo: Repo, output_folder: Path
+) -> None:
+    archive_url = generate_archive_endpoint(repo)
+    filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
+    output_archive = output_folder / filename
+
+    r = await client.get(archive_url)
+
+    async with await trio.open_file(output_archive, mode="wb") as f:
+        await f.write(r.content)
+
+    click.echo(f"{output_archive} ✓")
+
+
+async def get_archives(
+    headers: httpx.Headers, repos: Repos, output_folder: Path
+) -> None:
+    async with (
+        httpx.AsyncClient(
+            base_url=BASE_URL, headers=headers, follow_redirects=True
+        ) as client,
+        trio.open_nursery() as nursery,
+    ):
+        for repo in repos:
+            nursery.start_soon(get_single_archive, client, repo, output_folder)
 
 
 @click.command()
@@ -70,8 +102,11 @@ def main(token: str) -> None:
             "X-GitHub-Api-Version": "2022-11-28",
         }
     )
+
     repos = trio.run(get_repos, headers)
     save_repos(repos, output_folder)
+
+    trio.run(get_archives, headers, repos, output_folder)
 
     click.echo(f"Number of repos: {len(repos)}")
     click.echo(f"Output folder: {output_folder}")

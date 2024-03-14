@@ -34,6 +34,11 @@
 - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link
 - https://github.com/encode/httpx/blob/0.27.0/httpx/_models.py#L782
 - https://github.com/encode/httpx/blob/0.27.0/httpx/_models.py#L773
+- https://github.com/octokit/octokit.js/issues/2369
+- https://www.python-httpx.org/compatibility/#redirects:
+  - "Unlike `requests`, HTTPX does **not follow redirects by default**."
+  - `response = client.get(url, follow_redirects=True)`
+  - `client = httpx.Client(follow_redirects=True)`
 
 ## Snippets
 
