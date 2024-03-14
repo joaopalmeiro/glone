@@ -41,6 +41,7 @@
   - `client = httpx.Client(follow_redirects=True)`
 - https://stackoverflow.com/a/27472808: `echo "Today is $(date). A fine day."`
 - https://ss64.com/mac/pbcopy.html
+- https://www.encode.io/httpcore/async/#trio
 
 ## Snippets
 
