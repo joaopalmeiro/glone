@@ -39,6 +39,8 @@
   - "Unlike `requests`, HTTPX does **not follow redirects by default**."
   - `response = client.get(url, follow_redirects=True)`
   - `client = httpx.Client(follow_redirects=True)`
+- https://stackoverflow.com/a/27472808: `echo "Today is $(date). A fine day."`
+- https://ss64.com/mac/pbcopy.html
 
 ## Snippets
 

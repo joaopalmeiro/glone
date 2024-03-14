@@ -83,6 +83,10 @@ hatch version major
 hatch build --clean
 ```
 
+```bash
+echo "v$(hatch version)" | pbcopy
+```
+
 - Commit and push changes.
 - Create a tag on [GitHub Desktop](https://github.blog/2020-05-12-create-and-push-tags-in-the-latest-github-desktop-2-5-release/).
 - Check [GitHub](https://github.com/joaopalmeiro/glone/tags).
