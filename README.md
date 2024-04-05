@@ -9,6 +9,18 @@ A CLI to back up all your [GitHub](https://github.com/) repositories.
 - [Source code](https://github.com/joaopalmeiro/glone)
 - [PyPI package](https://pypi.org/project/glone/)
 
+## Usage
+
+### Via [pipx](https://github.com/pypa/pipx)
+
+```bash
+pipx run glone --help
+```
+
+```bash
+pipx run glone
+```
+
 ## Development
 
 Install [pyenv](https://github.com/pyenv/pyenv) (if necessary).
