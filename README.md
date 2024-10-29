@@ -8,6 +8,7 @@ A CLI to back up all your [GitHub](https://github.com/) repositories.
 
 - [Source code](https://github.com/joaopalmeiro/glone)
 - [PyPI package](https://pypi.org/project/glone/)
+- [Snyk Advisor](https://snyk.io/advisor/python/glone)
 
 ## Usage
 
