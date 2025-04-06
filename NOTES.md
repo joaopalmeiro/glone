@@ -42,6 +42,18 @@
 - https://stackoverflow.com/a/27472808: `echo "Today is $(date). A fine day."`
 - https://ss64.com/mac/pbcopy.html
 - https://www.encode.io/httpcore/async/#trio
+- [Missing query params in url when params option is set](https://github.com/encode/httpx/issues/3433) issue:
+  - "In version 0.28.0, query params are never merged."
+  - https://github.com/encode/httpx/discussions/3428
+  - https://github.com/encode/httpx/issues/3483
+- [PoolTimeout when num tasks in asyncio.gather() exceeds client max_connections](https://github.com/encode/httpx/issues/1171) issue
+- https://github.com/python-trio/trio/issues/527
+- https://www.python-httpx.org/async/#streaming-responses: `async for chunk in response.aiter_bytes():`
+- `timeout=60`
+- https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#about-secondary-rate-limits:
+  - "Make too many concurrent requests. No more than 100 concurrent requests are allowed. This limit is shared across the REST API and GraphQL API."
+- https://trio.readthedocs.io/en/stable/reference-core.html#trio.CapacityLimiter
+  - https://www.python-httpx.org/advanced/resource-limits/: `max_keepalive_connections` is 20
 
 ## Snippets
 
@@ -264,6 +276,29 @@ else:
     import importlib_metadata
 
 __version__ = importlib_metadata.version(__name__)
+```
+
+```python
+async def get_single_archive(
+    client: httpx.AsyncClient,
+    repo: Repo,
+    output_folder: Path,
+    limiter: trio.CapacityLimiter,
+) -> None:
+    async with limiter:
+        archive_url = generate_archive_endpoint(repo)
+        filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
+        output_archive = output_folder / filename
+
+        r = await client.get(archive_url)
+
+        async with await trio.open_file(output_archive, mode="wb") as f:
+            # await f.write(r.content)
+            # or
+            async for chunk in r.aiter_bytes():
+                await f.write(chunk)
+
+        click.echo(f"{output_archive} ✓")
 ```
 
 ### `glone/cli.py` file

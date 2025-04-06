@@ -29,11 +29,11 @@ def save_repos(repos: Repos, output_folder: Path) -> None:
 
 async def get_repos(headers: httpx.Headers) -> Repos:
     repos = []
-    next_url = REPOS_URL
+    next_url = httpx.URL(
+        REPOS_URL, params={"visibility": "all", "affiliation": "owner"}
+    )
 
-    async with httpx.AsyncClient(
-        headers=headers, params={"visibility": "all", "affiliation": "owner"}
-    ) as client:
+    async with httpx.AsyncClient(headers=headers) as client:
         while True:
             r = await client.get(next_url)
 
@@ -41,7 +41,7 @@ async def get_repos(headers: httpx.Headers) -> Repos:
             repos.extend(data)
 
             try:
-                next_url = r.links["next"]["url"]
+                next_url = httpx.URL(r.links["next"]["url"])
             except KeyError:
                 break
 
@@ -53,23 +53,30 @@ def generate_archive_endpoint(repo: Repo) -> str:
 
 
 async def get_single_archive(
-    client: httpx.AsyncClient, repo: Repo, output_folder: Path
+    client: httpx.AsyncClient,
+    repo: Repo,
+    output_folder: Path,
+    limiter: trio.CapacityLimiter,
 ) -> None:
-    archive_url = generate_archive_endpoint(repo)
-    filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
-    output_archive = output_folder / filename
+    async with limiter:
+        archive_url = generate_archive_endpoint(repo)
+        filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
+        output_archive = output_folder / filename
 
-    r = await client.get(archive_url)
+        r = await client.get(archive_url)
 
-    async with await trio.open_file(output_archive, mode="wb") as f:
-        await f.write(r.content)
+        async with await trio.open_file(output_archive, mode="wb") as f:
+            async for chunk in r.aiter_bytes():
+                await f.write(chunk)
 
-    click.echo(f"{output_archive} ✓")
+        click.echo(f"{output_archive} ✓")
 
 
 async def get_archives(
     headers: httpx.Headers, repos: Repos, output_folder: Path
 ) -> None:
+    limiter = trio.CapacityLimiter(20)
+
     async with (
         httpx.AsyncClient(
             base_url=BASE_URL, headers=headers, follow_redirects=True
@@ -77,7 +84,7 @@ async def get_archives(
         trio.open_nursery() as nursery,
     ):
         for repo in repos:
-            nursery.start_soon(get_single_archive, client, repo, output_folder)
+            nursery.start_soon(get_single_archive, client, repo, output_folder, limiter)
 
 
 @click.command()
