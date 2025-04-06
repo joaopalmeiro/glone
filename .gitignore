@@ -1,12 +1,13 @@
-.DS_Store
-.ruff_cache/
+# .ruff_cache/: https://docs.astral.sh/ruff/settings/#cache-dir
+# dist/: https://hatch.pypa.io/latest/config/build/#output-directory
+# .mypy_cache/: https://github.com/python/mypy/blob/v1.12.0/docs/source/config_file.rst#incremental-mode
+
 __pycache__/
 .hatch/
-
-# https://hatch.pypa.io/latest/config/build/#output-directory
+.mypy_cache/
+.ruff_cache/
 dist/
 
-# https://github.com/python/mypy/blob/v1.8.0/docs/source/config_file.rst#incremental-mode
-.mypy_cache/
+.DS_Store
 
 repos.json

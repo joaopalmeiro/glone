@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -31,11 +31,11 @@ classifiers = [
 ]
 dependencies = [
   "click>=8.1.0",
-  "httpx>=0.27.0",
+  "httpx>=0.28.0",
   "platformdirs>=4.0.0",
-  "pydantic>=2.6.0",
-  "trio>=0.24.0",
-  "gaveta==0.1.1",
+  "pydantic>=2.11.0",
+  "trio>=0.29.0",
+  "gaveta==0.6.0",
 ]
 
 [project.urls]
@@ -50,7 +50,7 @@ path = "src/glone/__init__.py"
 
 [tool.hatch.envs.default]
 detached = false
-dependencies = ["ruff==0.3.0", "mypy==1.8.0"]
+dependencies = ["ruff==0.6.9", "mypy==1.12.0"]
 
 [tool.hatch.envs.default.scripts]
 lint = ["- ruff check .", "mypy"]

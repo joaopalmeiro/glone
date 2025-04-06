@@ -31,7 +31,7 @@ pyenv install && pyenv versions
 ```
 
 ```bash
-pip install hatch==1.9.3 && hatch --version
+pip install hatch==1.14.0 && hatch --version
 ```
 
 ```bash
