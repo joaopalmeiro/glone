@@ -509,3 +509,16 @@ def get_folder_file_count(path: Path) -> int:
     total_count = len([p for p in path.iterdir() if p.is_file()])
     return total_count
 ```
+
+### `glone/cli/models.py` file
+
+```python
+class Repos(RootModel[list[Repo]]):
+    root: list[Repo]
+
+    def __iter__(self):
+        return iter(self.root)
+
+    def __len__(self) -> int:
+        return len(self.root)
+```

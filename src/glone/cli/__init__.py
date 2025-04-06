@@ -17,17 +17,17 @@ from glone.cli.constants import (
 from glone.cli.models import Repo, Repos
 
 
-def save_repos(repos: Repos, output_folder: Path) -> None:
+def save_repos(repos: list[Repo], output_folder: Path) -> None:
     output_repos = output_folder / "repos.json"
 
     with output_repos.open(mode="w", encoding="utf-8") as f:
-        f.write(repos.model_dump_json(indent=2))
+        f.write(Repos.dump_json(repos, indent=2).decode("utf-8"))
         f.write("\n")
 
     click.echo(f"{output_repos} ✓")
 
 
-async def get_repos(headers: httpx.Headers) -> Repos:
+async def get_repos(headers: httpx.Headers) -> list[Repo]:
     repos = []
     next_url = httpx.URL(
         REPOS_URL, params={"visibility": "all", "affiliation": "owner"}
@@ -45,7 +45,7 @@ async def get_repos(headers: httpx.Headers) -> Repos:
             except KeyError:
                 break
 
-    return Repos(repos)
+    return Repos.validate_python(repos)
 
 
 def generate_archive_endpoint(repo: Repo) -> str:
@@ -73,7 +73,7 @@ async def get_single_archive(
 
 
 async def get_archives(
-    headers: httpx.Headers, repos: Repos, output_folder: Path
+    headers: httpx.Headers, repos: list[Repo], output_folder: Path
 ) -> None:
     limiter = trio.CapacityLimiter(20)
 
