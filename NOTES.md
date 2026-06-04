@@ -54,6 +54,7 @@
   - "Make too many concurrent requests. No more than 100 concurrent requests are allowed. This limit is shared across the REST API and GraphQL API."
 - https://trio.readthedocs.io/en/stable/reference-core.html#trio.CapacityLimiter
   - https://www.python-httpx.org/advanced/resource-limits/: `max_keepalive_connections` is 20
+- https://github.com/lirantal/gh-cp
 
 ## Snippets
 
