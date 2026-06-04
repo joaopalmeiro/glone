@@ -217,6 +217,71 @@ build-backend = "poetry.core.masonry.api"
 glone = "glone.cli:main"
 ```
 
+### `pyproject.toml` file (Hatch)
+
+```toml
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "glone"
+dynamic = ["version"]
+description = "A CLI to back up all your GitHub repositories."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "João Palmeiro", email = "joaopalmeiro@proton.me" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Utilities",
+]
+dependencies = [
+  "click>=8.1.0",
+  "httpx>=0.28.0",
+  "platformdirs>=4.0.0",
+  "pydantic>=2.11.0",
+  "trio>=0.29.0",
+  "gaveta==0.6.0",
+]
+
+[project.urls]
+Issues = "https://github.com/joaopalmeiro/glone/issues"
+Source = "https://github.com/joaopalmeiro/glone"
+
+[project.scripts]
+glone = "glone.cli:main"
+
+[tool.hatch.version]
+path = "src/glone/__init__.py"
+
+[tool.hatch.envs.default]
+detached = false
+dependencies = ["ruff==0.6.9", "mypy==1.12.0"]
+
+[tool.hatch.envs.default.scripts]
+lint = ["- ruff check .", "mypy"]
+format = ["- ruff check --fix .", "ruff format ."]
+
+[tool.hatch.build]
+packages = ["src/glone"]
+```
+
 ### `README.md` file
 
 ```markdown
@@ -265,6 +330,120 @@ This CLI was created with [Cookiecutter](https://github.com/audreyr/cookiecutter
 - [GitHub CLI](https://cli.github.com/) (a.k.a. `gh`).
 - [humanize](https://github.com/jmoiron/humanize/) package. `poetry add humanize`.
 ```
+
+````markdown
+# glone
+
+[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)
+
+A CLI to back up all your [GitHub](https://github.com/) repositories.
+
+- [Source code](https://github.com/joaopalmeiro/glone)
+- [PyPI package](https://pypi.org/project/glone/)
+- [Snyk Advisor](https://snyk.io/advisor/python/glone)
+
+## Usage
+
+### Via [pipx](https://github.com/pypa/pipx)
+
+```bash
+pipx run glone --help
+```
+
+```bash
+pipx run glone
+```
+
+## Development
+
+Install [pyenv](https://github.com/pyenv/pyenv) (if necessary).
+
+```bash
+pyenv install && pyenv versions
+```
+
+```bash
+pip install hatch==1.14.0 && hatch --version
+```
+
+```bash
+hatch config set dirs.env.virtual .hatch
+```
+
+```bash
+hatch config show
+```
+
+```bash
+hatch env create
+```
+
+```bash
+hatch status
+```
+
+```bash
+hatch env show
+```
+
+```bash
+hatch dep show table
+```
+
+```bash
+hatch run pip list
+```
+
+```bash
+hatch run glone --help
+```
+
+```bash
+hatch run glone
+```
+
+```bash
+hatch run lint
+```
+
+```bash
+hatch run format
+```
+
+## Deployment
+
+```bash
+hatch version micro
+```
+
+```bash
+hatch version minor
+```
+
+```bash
+hatch version major
+```
+
+```bash
+hatch build --clean
+```
+
+```bash
+echo "v$(hatch version)" | pbcopy
+```
+
+- Commit and push changes.
+- Create a tag on [GitHub Desktop](https://github.blog/2020-05-12-create-and-push-tags-in-the-latest-github-desktop-2-5-release/).
+- Check [GitHub](https://github.com/joaopalmeiro/glone/tags).
+
+```bash
+hatch publish
+```
+
+- Check [PyPI](https://pypi.org/project/glone/).
+````
 
 ### `glone/__init__.py` file
 
@@ -522,4 +701,129 @@ class Repos(RootModel[list[Repo]]):
 
     def __len__(self) -> int:
         return len(self.root)
+```
+
+### `src/glone/cli/__init__.py` file
+
+```python
+from pathlib import Path
+
+import click
+import httpx
+import trio
+from gaveta.files import ensure_dir
+from gaveta.time import ISOFormat, now_iso
+
+from glone import __version__
+from glone.cli.constants import (
+    ARCHIVE_FORMAT,
+    BASE_OUTPUT_FOLDER,
+    BASE_URL,
+    DEFAULT_ENV_VARIABLE,
+    REPOS_URL,
+)
+from glone.cli.models import Repo, Repos
+
+
+def save_repos(repos: list[Repo], output_folder: Path) -> None:
+    output_repos = output_folder / "repos.json"
+
+    with output_repos.open(mode="w", encoding="utf-8") as f:
+        f.write(Repos.dump_json(repos, indent=2).decode("utf-8"))
+        f.write("\n")
+
+    click.echo(f"{output_repos} ✓")
+
+
+async def get_repos(headers: httpx.Headers) -> list[Repo]:
+    repos = []
+    next_url = httpx.URL(
+        REPOS_URL, params={"visibility": "all", "affiliation": "owner"}
+    )
+
+    async with httpx.AsyncClient(headers=headers) as client:
+        while True:
+            r = await client.get(next_url)
+
+            data = r.json()
+            repos.extend(data)
+
+            try:
+                next_url = httpx.URL(r.links["next"]["url"])
+            except KeyError:
+                break
+
+    return Repos.validate_python(repos)
+
+
+def generate_archive_endpoint(repo: Repo) -> str:
+    return f"/repos/{repo.full_name}/{ARCHIVE_FORMAT}ball/{repo.default_branch}"
+
+
+async def get_single_archive(
+    client: httpx.AsyncClient,
+    repo: Repo,
+    output_folder: Path,
+    limiter: trio.CapacityLimiter,
+) -> None:
+    async with limiter:
+        archive_url = generate_archive_endpoint(repo)
+        filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
+        output_archive = output_folder / filename
+
+        r = await client.get(archive_url)
+
+        async with await trio.open_file(output_archive, mode="wb") as f:
+            async for chunk in r.aiter_bytes():
+                await f.write(chunk)
+
+        click.echo(f"{output_archive} ✓")
+
+
+async def get_archives(
+    headers: httpx.Headers, repos: list[Repo], output_folder: Path
+) -> None:
+    limiter = trio.CapacityLimiter(20)
+
+    async with (
+        httpx.AsyncClient(
+            base_url=BASE_URL, headers=headers, follow_redirects=True
+        ) as client,
+        trio.open_nursery() as nursery,
+    ):
+        for repo in repos:
+            nursery.start_soon(get_single_archive, client, repo, output_folder, limiter)
+
+
+@click.command()
+@click.option(
+    "-t",
+    "--token",
+    type=str,
+    metavar="VALUE",
+    envvar=DEFAULT_ENV_VARIABLE,
+    show_envvar=True,
+)
+@click.version_option(version=__version__)
+def main(token: str) -> None:
+    """A CLI to back up all your GitHub repositories."""
+    output_folder = BASE_OUTPUT_FOLDER / now_iso(ISOFormat.BASIC)
+    ensure_dir(output_folder)
+
+    headers = httpx.Headers(
+        {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+    )
+
+    repos = trio.run(get_repos, headers)
+    save_repos(repos, output_folder)
+
+    trio.run(get_archives, headers, repos, output_folder)
+
+    click.echo(f"Number of repos: {len(repos)}")
+    click.echo(f"Output folder: {output_folder}")
+    click.echo("Done!")
 ```

@@ -12,14 +12,14 @@ A CLI to back up all your [GitHub](https://github.com/) repositories.
 
 ## Usage
 
-### Via [pipx](https://github.com/pypa/pipx)
+### Via [uv](https://docs.astral.sh/uv/)
 
 ```bash
-pipx run glone --help
+uvx glone --help
 ```
 
 ```bash
-pipx run glone
+uvx glone
 ```
 
 ## Development
