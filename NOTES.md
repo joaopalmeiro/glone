@@ -55,6 +55,7 @@
 - https://trio.readthedocs.io/en/stable/reference-core.html#trio.CapacityLimiter
   - https://www.python-httpx.org/advanced/resource-limits/: `max_keepalive_connections` is 20
 - https://github.com/lirantal/gh-cp
+- https://docs.github.com/en/rest/repos/contents?apiVersion=2026-03-10#download-a-repository-archive-zip
 
 ## Snippets
 

@@ -12,19 +12,19 @@ A CLI to back up all your [GitHub](https://github.com/) repositories.
 
 ## Usage
 
-### Via [uv](https://docs.astral.sh/uv/)
+### Via [uv](https://docs.astral.sh/uv/) and [1Password CLI](https://www.1password.dev/cli/reference/commands/run)
 
 ```bash
 uvx glone --help
 ```
 
 ```bash
-uvx glone
+GITHUB_ACCESS_TOKEN="op://Development/glone/GITHUB_ACCESS_TOKEN" op run -- uvx glone
 ```
 
 ## Development
 
-Install [pyenv](https://github.com/pyenv/pyenv) (if necessary).
+Install [pyenv](https://github.com/pyenv/pyenv), [1Password](https://1password.com/downloads/), and [1Password CLI](https://developer.1password.com/docs/cli/get-started/) (if necessary).
 
 ```bash
 pyenv install && pyenv versions
@@ -77,6 +77,14 @@ hatch run lint
 ```bash
 hatch run format
 ```
+
+### Get a GitHub token
+
+1. Go to https://github.com/settings/personal-access-tokens
+2. _Generate new token_
+3. _Token name_: `glone`
+4. _Repository access_ > _All repositories_
+5. _Add permissions_ > `Contents` (_Access:_ `Read-only`)
 
 ## Deployment
 
