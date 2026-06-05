@@ -2,6 +2,7 @@ from pathlib import Path
 
 import click
 import httpx2
+import humanize
 import trio
 from gaveta.files import ensure_dir
 from gaveta.time import ISOFormat, now_iso
@@ -16,6 +17,11 @@ from glone.cli.constants import (
     USER_AGENT,
 )
 from glone.cli.models import Repo, Repos
+
+
+def folder_size(folder: Path) -> str:
+    total = sum(f.stat().st_size for f in folder.glob("*"))
+    return humanize.naturalsize(total)
 
 
 def save_repos(repos: list[Repo], output_folder: Path) -> None:
@@ -113,4 +119,5 @@ def main(token: str) -> None:
 
     click.echo(f"Number of repos: {len(repos)}")
     click.echo(f"Output folder: {output_folder}")
+    click.echo(f"Output folder size: {folder_size(output_folder)}")
     click.echo("Done!")

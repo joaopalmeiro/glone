@@ -29,11 +29,12 @@ classifiers = [
 ]
 dependencies = [
   "click>=8.4.0",
+  "gaveta>=0.6.0",
   "httpx2>=2.2.0",
+  "humanize>=4.15.0",
   "platformdirs>=4.0.0",
   "pydantic>=2.13.0",
   "trio>=0.30.0",
-  "gaveta==0.6.0",
 ]
 
 [project.urls]

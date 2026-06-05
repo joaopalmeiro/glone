@@ -62,6 +62,16 @@
 - https://pydantic.dev/docs/validation/latest/get-started/changelog/
 - `"python.defaultInterpreterPath": "${workspaceFolder}/.hatch/glone/bin/python"`
 
+## Commands
+
+```bash
+mkdir -p ~/Documents/kiro-glone && rsync -a --delete --exclude={'.git','.DS_Store','NOTES.md'} ~/Documents/GitHub/glone/ ~/Documents/kiro-glone
+```
+
+```bash
+kiro ~/Documents/kiro-glone
+```
+
 ## Snippets
 
 ```python
