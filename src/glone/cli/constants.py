@@ -9,5 +9,7 @@ BASE_URL = "https://api.github.com"
 REPOS_ENDPOINT = "/user/repos"
 REPOS_URL = urljoin(BASE_URL, REPOS_ENDPOINT)
 
+USER_AGENT = "glone (https://github.com/joaopalmeiro/glone)"
+
 BASE_OUTPUT_FOLDER = Path(user_documents_dir()) / "Backups" / "Repos" / "GitHub"
 ARCHIVE_FORMAT = "zip"

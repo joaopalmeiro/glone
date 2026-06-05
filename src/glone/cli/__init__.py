@@ -13,6 +13,7 @@ from glone.cli.constants import (
     BASE_URL,
     DEFAULT_ENV_VARIABLE,
     REPOS_URL,
+    USER_AGENT,
 )
 from glone.cli.models import Repo, Repos
 
@@ -100,7 +101,8 @@ def main(token: str) -> None:
         {
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
-            "X-GitHub-Api-Version": "2022-11-28",
+            "X-GitHub-Api-Version": "2026-03-10",
+            "User-Agent": USER_AGENT,
         }
     )
 

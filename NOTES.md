@@ -60,6 +60,7 @@
 - https://click.palletsprojects.com/en/stable/changes/
 - https://github.com/python-trio/trio/releases
 - https://pydantic.dev/docs/validation/latest/get-started/changelog/
+- `"python.defaultInterpreterPath": "${workspaceFolder}/.hatch/glone/bin/python"`
 
 ## Snippets
 

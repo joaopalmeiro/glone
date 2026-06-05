@@ -1,5 +1,5 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/.hatch/glone/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "mypy-type-checker.importStrategy": "fromEnvironment",
 
   "files.readonlyInclude": {
