@@ -1,4 +1,9 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/.hatch/glone/bin/python",
-  "mypy-type-checker.importStrategy": "fromEnvironment"
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+
+  "files.readonlyInclude": {
+    "LICENSE": true,
+    "uv.lock": true
+  }
 }

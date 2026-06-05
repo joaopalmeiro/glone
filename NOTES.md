@@ -56,6 +56,10 @@
   - https://www.python-httpx.org/advanced/resource-limits/: `max_keepalive_connections` is 20
 - https://github.com/lirantal/gh-cp
 - https://docs.github.com/en/rest/repos/contents?apiVersion=2026-03-10#download-a-repository-archive-zip
+- https://pydantic.dev/docs/validation/latest/integrations/dev-tools/mypy/
+- https://click.palletsprojects.com/en/stable/changes/
+- https://github.com/python-trio/trio/releases
+- https://pydantic.dev/docs/validation/latest/get-started/changelog/
 
 ## Snippets
 
@@ -827,4 +831,22 @@ def main(token: str) -> None:
     click.echo(f"Number of repos: {len(repos)}")
     click.echo(f"Output folder: {output_folder}")
     click.echo("Done!")
+```
+
+### `.gitignore` file
+
+```ignore
+# .ruff_cache/: https://docs.astral.sh/ruff/settings/#cache-dir
+# dist/: https://hatch.pypa.io/latest/config/build/#output-directory
+# .mypy_cache/: https://github.com/python/mypy/blob/v1.12.0/docs/source/config_file.rst#incremental-mode
+
+__pycache__/
+.hatch/
+.mypy_cache/
+.ruff_cache/
+dist/
+
+.DS_Store
+
+repos.json
 ```

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import click
-import httpx
+import httpx2
 import trio
 from gaveta.files import ensure_dir
 from gaveta.time import ISOFormat, now_iso
@@ -27,13 +27,11 @@ def save_repos(repos: list[Repo], output_folder: Path) -> None:
     click.echo(f"{output_repos} ✓")
 
 
-async def get_repos(headers: httpx.Headers) -> list[Repo]:
+async def get_repos(headers: httpx2.Headers) -> list[Repo]:
     repos = []
-    next_url = httpx.URL(
-        REPOS_URL, params={"visibility": "all", "affiliation": "owner"}
-    )
+    next_url = httpx2.URL(REPOS_URL, params={"visibility": "all", "affiliation": "owner"})
 
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx2.AsyncClient(headers=headers) as client:
         while True:
             r = await client.get(next_url)
 
@@ -41,7 +39,7 @@ async def get_repos(headers: httpx.Headers) -> list[Repo]:
             repos.extend(data)
 
             try:
-                next_url = httpx.URL(r.links["next"]["url"])
+                next_url = httpx2.URL(r.links["next"]["url"])
             except KeyError:
                 break
 
@@ -53,7 +51,7 @@ def generate_archive_endpoint(repo: Repo) -> str:
 
 
 async def get_single_archive(
-    client: httpx.AsyncClient,
+    client: httpx2.AsyncClient,
     repo: Repo,
     output_folder: Path,
     limiter: trio.CapacityLimiter,
@@ -72,15 +70,11 @@ async def get_single_archive(
         click.echo(f"{output_archive} ✓")
 
 
-async def get_archives(
-    headers: httpx.Headers, repos: list[Repo], output_folder: Path
-) -> None:
+async def get_archives(headers: httpx2.Headers, repos: list[Repo], output_folder: Path) -> None:
     limiter = trio.CapacityLimiter(20)
 
     async with (
-        httpx.AsyncClient(
-            base_url=BASE_URL, headers=headers, follow_redirects=True
-        ) as client,
+        httpx2.AsyncClient(base_url=BASE_URL, headers=headers, follow_redirects=True) as client,
         trio.open_nursery() as nursery,
     ):
         for repo in repos:
@@ -102,7 +96,7 @@ def main(token: str) -> None:
     output_folder = BASE_OUTPUT_FOLDER / now_iso(ISOFormat.BASIC)
     ensure_dir(output_folder)
 
-    headers = httpx.Headers(
+    headers = httpx2.Headers(
         {
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
