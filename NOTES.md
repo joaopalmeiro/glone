@@ -48,7 +48,9 @@
   - https://github.com/encode/httpx/issues/3483
 - [PoolTimeout when num tasks in asyncio.gather() exceeds client max_connections](https://github.com/encode/httpx/issues/1171) issue
 - https://github.com/python-trio/trio/issues/527
-- https://www.python-httpx.org/async/#streaming-responses: `async for chunk in response.aiter_bytes():`
+- https://www.python-httpx.org/async/#streaming-responses:
+  - `async for chunk in response.aiter_bytes():`
+- https://trio.readthedocs.io/en/stable/reference-io.html#trio.open_file
 - `timeout=60`
 - https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#about-secondary-rate-limits:
   - "Make too many concurrent requests. No more than 100 concurrent requests are allowed. This limit is shared across the REST API and GraphQL API."
@@ -1123,4 +1125,22 @@ def main(token: str) -> None:
     click.echo(f"Output folder: {output_folder}")
     click.echo(f"Output folder size: {folder_size(output_folder)}")
     click.echo("Done!")
+```
+
+```python
+async def get_single_archive(
+    client: httpx2.AsyncClient,
+    repo: Repo,
+    output_folder: Path,
+    limiter: trio.CapacityLimiter,
+) -> None:
+    archive_url = generate_archive_endpoint(repo)
+    filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
+    output_archive = output_folder / filename
+
+    async with limiter, await trio.open_file(output_archive, mode="wb") as f, client.stream("GET", archive_url) as r:
+        async for chunk in r.aiter_bytes():
+            await f.write(chunk)
+
+    click.echo(f"{output_archive} ✓")
 ```
