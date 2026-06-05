@@ -21,7 +21,7 @@ from glone.cli.models import Repo, Repos
 
 def folder_size(folder: Path) -> str:
     total = sum(f.stat().st_size for f in folder.glob("*"))
-    return humanize.naturalsize(total)
+    return humanize.naturalsize(total, format="%.2f")
 
 
 def save_repos(repos: list[Repo], output_folder: Path) -> None:

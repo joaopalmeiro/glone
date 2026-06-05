@@ -61,6 +61,7 @@
 - https://github.com/python-trio/trio/releases
 - https://pydantic.dev/docs/validation/latest/get-started/changelog/
 - `"python.defaultInterpreterPath": "${workspaceFolder}/.hatch/glone/bin/python"`
+- `total = sum(f.stat().st_size for f in folder.rglob("*") if f.is_file())`
 
 ## Commands
 
