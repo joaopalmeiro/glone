@@ -862,3 +862,265 @@ dist/
 
 repos.json
 ```
+
+```python
+from pathlib import Path
+
+import click
+import httpx
+import trio
+from gaveta.files import ensure_dir
+from gaveta.time import ISOFormat, now_iso
+
+from glone import __version__
+from glone.cli.constants import (
+    ARCHIVE_FORMAT,
+    BASE_OUTPUT_FOLDER,
+    BASE_URL,
+    DEFAULT_ENV_VARIABLE,
+    REPOS_URL,
+)
+from glone.cli.models import Repo, Repos
+
+# ── Tuning knobs ──────────────────────────────────────────────────────────────
+MAX_CONCURRENT_DOWNLOADS = 20
+CHUNK_SIZE = 1024 * 1024  # 1 MB — fewer async write() calls through trio's thread pool
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def save_repos(repos: list[Repo], output_folder: Path) -> None:
+    output_repos = output_folder / "repos.json"
+    with output_repos.open(mode="w", encoding="utf-8") as f:
+        f.write(Repos.dump_json(repos, indent=2).decode("utf-8"))
+        f.write("\n")
+    click.echo(f"{output_repos} ✓")
+
+
+def generate_archive_endpoint(repo: Repo) -> str:
+    return f"/repos/{repo.full_name}/{ARCHIVE_FORMAT}ball/{repo.default_branch}"
+
+
+async def download_archive(
+    client: httpx.AsyncClient,
+    repo: Repo,
+    output_folder: Path,
+    limiter: trio.CapacityLimiter,
+) -> None:
+    async with limiter:
+        url = generate_archive_endpoint(repo)
+        filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
+        output_archive = output_folder / filename
+
+        # stream="GET": bytes go straight to disk as they arrive instead of
+        # buffering the entire archive in RAM before the first write.
+        try:
+            async with client.stream("GET", url) as r:
+                r.raise_for_status()
+                async with await trio.open_file(output_archive, mode="wb") as f:
+                    async for chunk in r.aiter_bytes(chunk_size=CHUNK_SIZE):
+                        await f.write(chunk)
+            click.echo(f"{output_archive} ✓")
+        except Exception as exc:
+            # Catch per-task: one failed download must not cancel the nursery
+            # and abort all other in-flight downloads.
+            click.echo(f"{output_archive} ✗ ({exc})", err=True)
+
+
+
+async def run(headers: httpx.Headers, output_folder: Path) -> list[Repo]:
+    all_repos: list[Repo] = []
+    limiter = trio.CapacityLimiter(MAX_CONCURRENT_DOWNLOADS)
+
+    async with (
+        # One shared client for both repo listing and archive downloads:
+        #   • connection pool is reused — no repeated TLS handshakes
+        #   • http2=True multiplexes concurrent API calls over fewer TCP connections
+        #     (install httpx[http2] to enable: `pip install httpx[http2]`)
+        httpx.AsyncClient(
+            base_url=BASE_URL,
+            headers=headers,
+            follow_redirects=True,
+            http2=True,
+            limits=httpx.Limits(
+                max_connections=MAX_CONCURRENT_DOWNLOADS + 5,
+                max_keepalive_connections=MAX_CONCURRENT_DOWNLOADS,
+                keepalive_expiry=30,
+            ),
+        ) as client,
+        trio.open_nursery() as nursery,
+    ):
+        # Pipeline: kick off archive downloads for each page of repos immediately,
+        # so downloads are already running while pagination is still in progress.
+        # Original code waited for ALL repos before starting ANY download.
+        next_url: httpx.URL | None = httpx.URL(
+            REPOS_URL, params={"visibility": "all", "affiliation": "owner", "per_page": 100}
+        )
+        while next_url is not None:
+            r = await client.get(next_url)
+            r.raise_for_status()
+            page = Repos.validate_python(r.json())
+            all_repos.extend(page)
+            for repo in page:
+                nursery.start_soon(download_archive, client, repo, output_folder, limiter)
+            next_url = httpx.URL(r.links["next"]["url"]) if "next" in r.links else None
+
+        # Nursery exit waits for all in-flight downloads to finish.
+
+    return all_repos
+
+
+@click.command()
+@click.option(
+    "-t",
+    "--token",
+    type=str,
+    metavar="VALUE",
+    envvar=DEFAULT_ENV_VARIABLE,
+    show_envvar=True,
+)
+@click.version_option(version=__version__)
+def main(token: str) -> None:
+    """A CLI to back up all your GitHub repositories."""
+    output_folder = BASE_OUTPUT_FOLDER / now_iso(ISOFormat.BASIC)
+    ensure_dir(output_folder)
+    headers = httpx.Headers(
+        {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+    )
+    # Single trio.run() keeps repo listing and all downloads in one event loop.
+    repos = trio.run(run, headers, output_folder)
+    save_repos(repos, output_folder)
+    click.echo(f"Number of repos: {len(repos)}")
+    click.echo(f"Output folder: {output_folder}")
+    click.echo("Done!")
+```
+
+```python
+from pathlib import Path
+
+import click
+import httpx2
+import humanize
+import trio
+from gaveta.files import ensure_dir
+from gaveta.time import ISOFormat, now_iso
+
+from glone import __version__
+from glone.cli.constants import (
+    ARCHIVE_FORMAT,
+    BASE_OUTPUT_FOLDER,
+    BASE_URL,
+    DEFAULT_ENV_VARIABLE,
+    USER_AGENT,
+)
+from glone.cli.models import Repo, Repos
+
+
+def folder_size(folder: Path) -> str:
+    total = sum(f.stat().st_size for f in folder.iterdir())
+    return humanize.naturalsize(total)
+
+
+def save_repos(repos: list[Repo], output_folder: Path) -> None:
+    output_repos = output_folder / "repos.json"
+
+    with output_repos.open(mode="w", encoding="utf-8") as f:
+        f.write(Repos.dump_json(repos, indent=2).decode("utf-8"))
+        f.write("\n")
+
+    click.echo(f"{output_repos} ✓")
+
+
+async def fetch_repos(client: httpx2.AsyncClient) -> list[Repo]:
+    repos = []
+    next_url = "/user/repos"
+    params = {"visibility": "all", "affiliation": "owner"}
+
+    while next_url is not None:
+        r = await client.get(next_url, params=params)
+        params = None  # only needed on the first request
+        repos.extend(r.json())
+
+        next_link = r.links.get("next", {}).get("url")
+        if next_link:
+            parsed = httpx2.URL(next_link)
+            next_url = str(parsed.copy_with(scheme="", host="", port=None))
+        else:
+            next_url = None
+
+    return Repos.validate_python(repos)
+
+
+def archive_path(repo: Repo, output_folder: Path) -> tuple[str, Path]:
+    endpoint = f"/repos/{repo.full_name}/{ARCHIVE_FORMAT}ball/{repo.default_branch}"
+    filename = f"{repo.name}-{repo.default_branch}.{ARCHIVE_FORMAT}"
+    return endpoint, output_folder / filename
+
+
+async def download_archive(
+    client: httpx2.AsyncClient,
+    endpoint: str,
+    output_archive: Path,
+    limiter: trio.CapacityLimiter,
+) -> None:
+    async with limiter:
+        async with await trio.open_file(output_archive, mode="wb") as f:
+            async with client.stream("GET", endpoint) as r:
+                async for chunk in r.aiter_bytes():
+                    await f.write(chunk)
+
+        click.echo(f"{output_archive} ✓")
+
+
+async def run(headers: httpx2.Headers, output_folder: Path) -> list[Repo]:
+    """Single async entrypoint: fetch repo list then download all archives concurrently."""
+    async with httpx2.AsyncClient(
+        base_url=BASE_URL, headers=headers, follow_redirects=True
+    ) as client:
+        repos = await fetch_repos(client)
+        save_repos(repos, output_folder)
+
+        limiter = trio.CapacityLimiter(20)
+        targets = [archive_path(repo, output_folder) for repo in repos]
+
+        async with trio.open_nursery() as nursery:
+            for endpoint, output_archive in targets:
+                nursery.start_soon(download_archive, client, endpoint, output_archive, limiter)
+
+    return repos
+
+
+@click.command()
+@click.option(
+    "-t",
+    "--token",
+    type=str,
+    metavar="VALUE",
+    envvar=DEFAULT_ENV_VARIABLE,
+    show_envvar=True,
+)
+@click.version_option(version=__version__)
+def main(token: str) -> None:
+    """A CLI to back up all your GitHub repositories."""
+    output_folder = BASE_OUTPUT_FOLDER / now_iso(ISOFormat.BASIC)
+    ensure_dir(output_folder)
+
+    headers = httpx2.Headers(
+        {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "X-GitHub-Api-Version": "2026-03-10",
+            "User-Agent": USER_AGENT,
+        }
+    )
+
+    repos = trio.run(run, headers, output_folder)
+
+    click.echo(f"Number of repos: {len(repos)}")
+    click.echo(f"Output folder: {output_folder}")
+    click.echo(f"Output folder size: {folder_size(output_folder)}")
+    click.echo("Done!")
+```

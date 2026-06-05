@@ -36,7 +36,7 @@ def save_repos(repos: list[Repo], output_folder: Path) -> None:
 
 async def get_repos(headers: httpx2.Headers) -> list[Repo]:
     repos = []
-    next_url = httpx2.URL(REPOS_URL, params={"visibility": "all", "affiliation": "owner"})
+    next_url = httpx2.URL(REPOS_URL, params={"visibility": "all", "affiliation": "owner", "per_page": "100"})
 
     async with httpx2.AsyncClient(headers=headers) as client:
         while True:
@@ -78,7 +78,7 @@ async def get_single_archive(
 
 
 async def get_archives(headers: httpx2.Headers, repos: list[Repo], output_folder: Path) -> None:
-    limiter = trio.CapacityLimiter(20)
+    limiter = trio.CapacityLimiter(50)
 
     async with (
         httpx2.AsyncClient(base_url=BASE_URL, headers=headers, follow_redirects=True) as client,
